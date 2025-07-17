@@ -1,103 +1,71 @@
-import { useGame } from "../../lib/stores/useGame";
-import { usePuzzle } from "../../lib/stores/usePuzzle";
-import { useAudio } from "../../lib/stores/useAudio";
-import Inventory from "./Inventory";
+import { useState } from "react";
+import { useInventory } from "../../lib/stores/useInventory";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-import { Volume2, VolumeX, RotateCcw } from "lucide-react";
+import { Package, X } from "lucide-react";
 
-export default function GameUI() {
-  const { phase, restart } = useGame();
-  const { solvedPuzzles, totalPuzzles } = usePuzzle();
-  const { isMuted, toggleMute } = useAudio();
+export default function Inventory() {
+  const { items, removeItem } = useInventory();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const progress = totalPuzzles > 0 ? (solvedPuzzles.length / totalPuzzles) * 100 : 0;
+  if (!isOpen) {
+    return (
+      <Button
+        onClick={() => setIsOpen(true)}
+        className="fixed top-4 right-4 bg-gray-800 hover:bg-gray-700 text-white border-2 border-gray-600"
+        size="sm"
+      >
+        <Package className="w-4 h-4 mr-2" />
+        Inventory ({items.length})
+      </Button>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 pointer-events-none">
-      {/* Top HUD */}
-      <div className="absolute top-4 left-4 pointer-events-auto">
-        <Card className="bg-gray-900 border-gray-700 text-white">
-          <CardContent className="p-4">
+    <div className="fixed top-4 right-4 w-80 max-h-96 overflow-y-auto">
+      <Card className="bg-gray-900 border-gray-700 text-white">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">Inventory</CardTitle>
+            <Button
+              onClick={() => setIsOpen(false)}
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {items.length === 0 ? (
+            <p className="text-gray-400 text-center py-4">No items collected</p>
+          ) : (
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Progress</span>
-                <span className="text-sm">{solvedPuzzles.length}/{totalPuzzles}</span>
-              </div>
-              <div className="w-48 bg-gray-700 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex justify-between items-center p-2 bg-gray-800 rounded border border-gray-600"
+                >
+                  <div>
+                    <h3 className="font-medium">{item.name}</h3>
+                    <p className="text-sm text-gray-400">{item.type}</p>
+                  </div>
+                  <Button
+                    onClick={() => removeItem(item.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Controls */}
-      <div className="absolute bottom-4 left-4 pointer-events-auto">
-        <Card className="bg-gray-900 border-gray-700 text-white">
-          <CardContent className="p-4">
-            <div className="space-y-2 text-sm">
-              <div><span className="font-medium">WASD/Arrow Keys:</span> Move</div>
-              <div><span className="font-medium">E/Space:</span> Interact</div>
-              <div><span className="font-medium">I/Tab:</span> Inventory</div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Audio and Game Controls */}
-      <div className="absolute bottom-4 right-4 pointer-events-auto flex gap-2">
-        <Button
-          onClick={toggleMute}
-          variant="outline"
-          size="sm"
-          className="bg-gray-800 hover:bg-gray-700 text-white border-gray-600"
-        >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </Button>
-        
-        <Button
-          onClick={restart}
-          variant="outline"
-          size="sm"
-          className="bg-gray-800 hover:bg-gray-700 text-white border-gray-600"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* Inventory */}
-      <div className="pointer-events-auto">
-        <Inventory />
-      </div>
-
-      {/* Game Over Screen */}
-      {phase === "ended" && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center pointer-events-auto">
-          <Card className="bg-gray-900 border-gray-700 text-white">
-            <CardContent className="p-8 text-center">
-              <h2 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-                Congratulations!
-              </h2>
-              <p className="text-lg mb-6">
-                You've solved all puzzles in this enchanted realm!
-              </p>
-              <p className="text-gray-400 mb-6">
-                Continue exploring to discover new areas and secrets...
-              </p>
-              <Button
-                onClick={restart}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-              >
-                Explore New Realm
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
